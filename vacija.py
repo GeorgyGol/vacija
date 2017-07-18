@@ -6,6 +6,10 @@ import re
 from datetime import datetime as dt
 import numpy as np
 import io
+import sys
+
+
+__version__=1.3
 #коэффициенты амортизационных отчислений
 
 #k_amo={'panel': (0.7, ('панел',)), 
@@ -106,17 +110,28 @@ def clean_for_research1(dtfm):
     try:
         f_lsqr=dtf.ix[dtf['address'].str.contains('ш. Варшавское, д. 144, к. 2'), 'living_square'].values[0]
         dtf.ix[dtf['address'].str.contains('ш. Варшавское, д. 144, к. 1'), 'living_square']=f_lsqr
+    except:
+        print('For cleaning ш. Варшавское, д. 144, к. 2 - ', sys.exc_info()[0])
         #7929586     ул. Флотская, д. 13, к. 3  1975.0     17  1МГ601   
+    try:
         dtf.loc[7929586, 'living_square']=dtf.loc[7929614, 'living_square']
         #print(dtf.loc[7929586, 'living_square'])
         dtf.loc[7742610, 'living_square']=dtf.loc[7552321, 'living_square'] #г. Зеленоград, д. 815  1974.0      9   
-
+    except:
+        print('For cleaning г. Зеленоград, д. 815 error - ', sys.exc_info()[0])
+    try:
         #Moscow spec - this house 9068616 from Tomsk!!! And with error living square
+        
         dtf.drop([9068616], inplace=True)
         dtf.drop([8033016], inplace=True) #'МНОГОЭТАЖНАЯ НАДЗЕМНАЯ ОТКРЫТАЯ АВТОСТОЯНКА НА 100 МАШИНОМЕСТ'
         
         dtf.drop([9084016], inplace=True) # деревянный дом 321 этаж и жилой площадью млн. кв. м.
     except:
-        pass
+        print('For cleaning special Moscow error - ', sys.exc_info()[0])
         
+    dtf.floors=pd.to_numeric(dtf.floors, errors='coerce')
+    dtf.year=pd.to_numeric(dtf.year, errors='coerce')
+    dtf.entrance=pd.to_numeric(dtf.entrance, errors='coerce')
+    dtf.floors[dtf.floors>100]=0
+
     return dtf
